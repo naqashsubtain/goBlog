@@ -18,10 +18,11 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateUser))).Methods("PUT")
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
 
-	//Posts routes
-	s.Router.HandleFunc("/posts", middlewares.SetMiddlewareJSON(s.CreatePost)).Methods("POST")
-	s.Router.HandleFunc("/posts", middlewares.SetMiddlewareJSON(s.GetPosts)).Methods("GET")
-	s.Router.HandleFunc("/posts/{id}", middlewares.SetMiddlewareJSON(s.GetPost)).Methods("GET")
-	s.Router.HandleFunc("/posts/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdatePost))).Methods("PUT")
-	s.Router.HandleFunc("/posts/{id}", middlewares.SetMiddlewareAuthentication(s.DeletePost)).Methods("DELETE")
+	//Jobs routes
+	s.Router.HandleFunc("/jobs", middlewares.SetMiddlewareJSON(s.CreateJob)).Methods("POST")
+	s.Router.HandleFunc("/jobs", middlewares.SetMiddlewareJSON(s.GetJobs)).Methods("GET")
+	s.Router.HandleFunc("/jobs/{id}", middlewares.SetMiddlewareJSON(s.GetJob)).Methods("GET")
+	s.Router.HandleFunc("/jobs/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateJob))).Methods("PUT")
+	s.Router.HandleFunc("/jobs/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteJob)).Methods("DELETE")
+	s.Router.HandleFunc("/jobsByDistance", middlewares.SetMiddlewareJSON(s.GetJobsbyDistance)).Methods("POST")
 }
