@@ -22,7 +22,7 @@ type Job struct {
 	UpdatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 	Latitude    float64   `json:"latitude"`
 	Longitude   float64   `json:"longitude"`
-	Distance    float64   `sql:"_" json:"distance"`
+	distance    float64   `sql:"_" json:"distance"`
 }
 
 func (j *Job) Prepare() {
@@ -32,6 +32,7 @@ func (j *Job) Prepare() {
 	j.User = User{}
 	j.CreatedAt = time.Now()
 	j.UpdatedAt = time.Now()
+	j.IsActive = true
 }
 
 func (j *Job) Validate() error {
@@ -126,27 +127,29 @@ func (j *Job) DeleteAJob(db *gorm.DB, pid uint64, uid uint32) (int64, error) {
 	return db.RowsAffected, nil
 }
 
-func (j *Job) SoftDelete(db *gorm.DB, pid uint64, uid uint32) (int64, error) {
+func (j *Job) SoftDelete(db *gorm.DB, pid uint64) (*Job, error) {
 
-	err := db.Debug().Model(&Job{}).Where("id = ?", j.ID).Updates(Job{IsActive: false, UpdatedAt: time.Now()}).Error
-
+	var err error
+	err = db.Model(&Job{}).Where("id = ?", j.ID).Updates(Job{Title: j.Title, Description: j.Description, UpdatedAt: time.Now(), IsActive: false}).Error
+	// err = db.Debug().Model(&Job{}).Where("id = ?", j.ID).Updates(Job{IsActive: false, UpdatedAt: time.Now()}).Error
 	if err != nil {
-		if gorm.IsRecordNotFoundError(db.Error) {
-			return 0, errors.New("Job not found")
-		}
-		return 0, db.Error
+		return &Job{}, err
 	}
-	return db.RowsAffected, nil
+	if j.ID != 0 {
+		err = db.Debug().Model(&User{}).Where("id = ?", j.UserID).Take(&j.User).Error
+		if err != nil {
+			return &Job{}, err
+		}
+	}
+	return j, nil
 }
 
-func (j *Job) FindJobsByDistance(db *gorm.DB, distance float64, lat float64, lon float64) (*[]Job, error) {
+func (j *Job) FindJobsByDistance(db *gorm.DB, distance float64, lat float64, lon float64, uid uint32) (*[]Job, error) {
 	fmt.Println("func params: ")
-	fmt.Print(distance)
-	fmt.Print(lat)
-	fmt.Println(lon)
+	fmt.Println(uid)
 	var err error
 	Jobs := []Job{}
-	err = db.Raw("SELECT *,( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance FROM jobs where user_id=? HAVING distance < ? ", lat, lon, lat, j.UserID, distance).Scan(&Jobs).Error
+	err = db.Raw("SELECT *,( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance FROM jobs where user_id=? HAVING distance < ? ", lat, lon, lat, uid, distance).Scan(&Jobs).Error
 	if err != nil {
 		return &[]Job{}, err
 	}

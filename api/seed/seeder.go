@@ -16,7 +16,7 @@ var users = []models.User{
 	},
 	models.User{
 		Nickname: "naqash",
-		Email:    "naqash.subtainr@hotmail.com",
+		Email:    "naqash.subtain@hotmail.com",
 		Password: "mns",
 	},
 }
@@ -31,8 +31,8 @@ var Jobs = []models.Job{
 		User:        models.User{},
 		CreatedAt:   time.Time{},
 		UpdatedAt:   time.Time{},
-		Latitude:    0,
-		Longitude:   0,
+		Latitude:    31.155500,
+		Longitude:   72.667916,
 	},
 	models.Job{
 
@@ -43,8 +43,8 @@ var Jobs = []models.Job{
 		User:        models.User{},
 		CreatedAt:   time.Time{},
 		UpdatedAt:   time.Time{},
-		Latitude:    0,
-		Longitude:   0,
+		Latitude:    31.428070,
+		Longitude:   73.042829,
 	},
 	models.Job{
 
@@ -55,8 +55,8 @@ var Jobs = []models.Job{
 		User:        models.User{},
 		CreatedAt:   time.Time{},
 		UpdatedAt:   time.Time{},
-		Latitude:    0,
-		Longitude:   0,
+		Latitude:    31.150017,
+		Longitude:   72.729680,
 	},
 	models.Job{
 
@@ -67,8 +67,8 @@ var Jobs = []models.Job{
 		User:        models.User{},
 		CreatedAt:   time.Time{},
 		UpdatedAt:   time.Time{},
-		Latitude:    0,
-		Longitude:   0,
+		Latitude:    31.150017,
+		Longitude:   72.729680,
 	},
 	models.Job{
 
@@ -129,7 +129,16 @@ func Load(db *gorm.DB) {
 		if err != nil {
 			log.Fatalf("cannot seed users table: %v", err)
 		}
-		Jobs[i].UserID = users[i].ID
+		// Jobs[i].UserID = users[i].ID
+
+		// err = db.Debug().Model(&models.Job{}).Create(&Jobs[i]).Error
+		// if err != nil {
+		// 	log.Fatalf("cannot seed Jobs table: %v", err)
+		// }
+	}
+	for i, _ := range Jobs {
+
+		Jobs[i].UserID = uint32(i%2) + 1
 
 		err = db.Debug().Model(&models.Job{}).Create(&Jobs[i]).Error
 		if err != nil {

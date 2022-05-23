@@ -24,5 +24,6 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/jobs/{id}", middlewares.SetMiddlewareJSON(s.GetJob)).Methods("GET")
 	s.Router.HandleFunc("/jobs/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateJob))).Methods("PUT")
 	s.Router.HandleFunc("/jobs/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteJob)).Methods("DELETE")
-	s.Router.HandleFunc("/jobsByDistance", middlewares.SetMiddlewareJSON(s.GetJobsbyDistance)).Methods("POST")
+	s.Router.HandleFunc("/softDeletejob/{id}", middlewares.SetMiddlewareAuthentication(s.SoftDeleteJob)).Methods("DELETE")
+	s.Router.HandleFunc("/jobsByDistance", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetJobsbyDistance))).Methods("POST")
 }

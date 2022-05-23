@@ -214,14 +214,90 @@ func (server *Server) GetJobsbyDistance(w http.ResponseWriter, r *http.Request) 
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
+	uid, err := auth.ExtractTokenID(r)
 	fmt.Println("quer params: ")
 	fmt.Print(params.Distance)
 	fmt.Print(params.Lat)
 	fmt.Println(params.Lon)
-	Jobs, err := Job.FindJobsByDistance(server.DB, params.Distance, params.Lat, params.Lon)
+	Jobs, err := Job.FindJobsByDistance(server.DB, params.Distance, params.Lat, params.Lon, uid)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
 	responses.JSON(w, http.StatusOK, Jobs)
+}
+func (server *Server) SoftDeleteJob(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+
+	// Check if the Job id is valid
+	pid, err := strconv.ParseUint(vars["id"], 10, 64)
+	if err != nil {
+		responses.ERROR(w, http.StatusBadRequest, err)
+		return
+	}
+
+	//CHeck if the auth token is valid and  get the user id from it
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("unauthorized token not found"))
+		return
+	}
+
+	// Check if the Job exist
+	Job := models.Job{}
+	err = server.DB.Debug().Model(models.Job{}).Where("id = ?", pid).Take(&Job).Error
+	if err != nil {
+		responses.ERROR(w, http.StatusNotFound, errors.New("job not found"))
+		return
+	}
+
+	// If a user attempt to update a Job not belonging to him
+	if uid != Job.UserID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("unauthorized job is not for user"))
+		return
+	}
+	// Read the data Job
+	// body, err := ioutil.ReadAll(r.Body)
+	// if err != nil {
+	// 	responses.ERROR(w, http.StatusUnprocessableEntity, err)
+	// 	return
+	// }
+
+	// // Start processing the request data
+	// JobUpdate := models.Job{}
+	// err = json.Unmarshal(body, &JobUpdate)
+	// if err != nil {
+	// 	responses.ERROR(w, http.StatusUnprocessableEntity, err)
+	// 	return
+	// }
+
+	//Also check if the request user id is equal to the one gotten from token
+	// if uid != JobUpdate.UserID {
+	// 	responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+	// 	return
+	// }
+
+	// JobUpdate.Prepare()
+	// err = JobUpdate.Validate()
+	// if err != nil {
+	// 	responses.ERROR(w, http.StatusUnprocessableEntity, err)
+	// 	return
+	// }
+
+	// JobUpdate.ID = Job.ID //this is important to tell the model the Job id to update, the other update field are set above
+	JobUpdate := models.Job{}
+	err = server.DB.Debug().Model(models.Job{}).Where("id = ?", pid).Take(&Job).Error
+	if err != nil {
+		responses.ERROR(w, http.StatusNotFound, errors.New("Unauthorized"))
+		return
+	}
+	JobUpdated, err := JobUpdate.SoftDelete(server.DB, pid)
+
+	if err != nil {
+		formattedError := formaterror.FormatError(err.Error())
+		responses.ERROR(w, http.StatusInternalServerError, formattedError)
+		return
+	}
+	responses.JSON(w, http.StatusOK, JobUpdated)
 }
