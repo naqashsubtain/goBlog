@@ -8,8 +8,8 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/", //middlewares.SetMiddlewareAuthentication(
 		middlewares.SetMiddlewareJSON(s.Home)).Methods("GET")
 
-	// Login Route
-	s.Router.HandleFunc("/login", middlewares.SetMiddlewareJSON(s.Login)).Methods("POST")
+	// Login Route for admin users
+	s.Router.HandleFunc("/admin/login", middlewares.SetMiddlewareJSON(s.Login)).Methods("POST")
 
 	//Users routes
 	s.Router.HandleFunc("/users", middlewares.SetMiddlewareJSON(s.CreateUser)).Methods("POST")
@@ -17,6 +17,9 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateUser))).Methods("PUT")
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
+
+	s.Router.HandleFunc("/createInvite", middlewares.SetMiddlewareAuthentication(s.CreateInviteToken))
+	s.Router.HandleFunc("/invite/login", s.SetMiddlewareInviteToken(s.GetJobs))
 
 	//Jobs routes
 	s.Router.HandleFunc("/jobs", middlewares.SetMiddlewareJSON(s.CreateJob)).Methods("POST")

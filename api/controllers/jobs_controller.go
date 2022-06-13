@@ -301,3 +301,15 @@ func (server *Server) SoftDeleteJob(w http.ResponseWriter, r *http.Request) {
 	}
 	responses.JSON(w, http.StatusOK, JobUpdated)
 }
+
+func (server *Server) SuccessLoggrdIn(w http.ResponseWriter, r *http.Request) {
+
+	Job := models.Job{}
+
+	Jobs, err := Job.FindAllJobs(server.DB)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, Jobs)
+}
